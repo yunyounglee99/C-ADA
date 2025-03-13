@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 
 class ContinualAdapterLayer(nn.Module):
-  def __init__(self, in_dim, hidden_dim, total_tasks):
+  def __init__(self, in_dim:int, hidden_dim:int, total_tasks:int):
     super().__init__()
     self.in_dim = in_dim
     self.hidden_dim = hidden_dim
@@ -18,9 +18,9 @@ class ContinualAdapterLayer(nn.Module):
       self.up_projections.append(up)
 
     self.relu = nn.ReLU()
-    self.current_task = 0
+    self.current_task = 0 
 
-  def set_current_task(self, task_id):
+  def set_current_task(self, task_id:int):
     self.current_task = task_id
 
     for i in range(self.total_tasks):
