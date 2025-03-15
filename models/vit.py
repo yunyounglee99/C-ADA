@@ -42,3 +42,7 @@ class ViTBlockWithCADA(nn.Module):
       cal2_out = self.cal_mlp(x_prime)
       x_out = mlp_out + self.lamda * cal2_out
 
+if __name__ == "__main__":
+  model_name = "google/vit-base-patch16-224-in21k"
+  model = ViTModel.from_pretrained(model_name)
+  print(model)
