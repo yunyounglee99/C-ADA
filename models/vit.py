@@ -21,7 +21,7 @@ class ViTBlockWithCADA(nn.Module):
 
   def freeze_sns(self):
     for param in self.sns.parameters():
-      param.requires_grad = True
+      param.requires_grad = False
 
   def forward(self, hidden_states, attention_mask = None):
     # 1. layer norm
@@ -79,6 +79,28 @@ class CADA_ViTModel(nn.Module):
 
     self.total_tasks = total_tasks
     self.current_task = 0
+    self.classifier = nn.Linear(embed_dim, num_classes)
+
+  def set_current_task(self, task_id):
+    self.current_task = task_id
+    for block in self.base_vit.encoder.layer:
+      block.set_current_task(task_id)
+      
+  def freeze_sns(self):
+    for block in self.base_vit.encoder.layer:
+      block.freeze_sns()
+
+  def forward(self, pixel_values, attention_mask = None):
+    outputs = self.base_vit(
+      pixel_values = pixel_values,
+      attention_mask = attention_mask,
+      output_attentions = False,
+      output_hidden_states = False,
+      return_dict = True
+    )
+    last_hidden_state = outputs.last_hidden_state
+    cls_token = last_hidden_state[:,0,:]
+    logits = self.classifier(cls_token)
 
 if __name__ == "__main__":
   model_name = "google/vit-base-patch16-224-in21k"
