@@ -62,7 +62,6 @@ class ViTBlockWithCADA(nn.Module):
 
 class CADA_ViTModel(nn.Module):
   def __init__(self,
-              total_tasks,
               hidden_dim,
               num_classes,
               model_name = "google/vit-base-patch16-224-in21k"):
