@@ -6,7 +6,8 @@ def orthogonal_loss(
     old_dp_list : list[torch.Tensor],
     old_up_list : list[torch.Tensor]
 ) -> torch.Tensor:
-  device = torch.device("cuda" if torch.cuda.is_available() else "cpu") # w_t_dp, w_t_up도 gpu로 들어가게 하기
+  # w_t_dp, w_t_up도 gpu로 들어가게 하기
+  device = torch.device("cuda" if torch.cuda.is_available() else "cpu") 
   loss_dp = torch.tensor(0.0, device = device)
   loss_up = torch.tensor(0.0, device = device)
 
@@ -21,5 +22,5 @@ def orthogonal_loss(
     loss_up = (up_mat ** 2).sum()
 
   loss = loss_dp + loss_up
-  
+
   return loss
