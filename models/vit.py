@@ -78,6 +78,7 @@ class CADA_ViTModel(nn.Module):
       self.base_vit.encoder.layer[i] = wrapped_block
 
     self.total_tasks = total_tasks
+    self.current_task = 0
 
 if __name__ == "__main__":
   model_name = "google/vit-base-patch16-224-in21k"
