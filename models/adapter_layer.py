@@ -2,23 +2,37 @@ import torch
 import torch.nn as nn
 
 class ContinualAdapterLayer(nn.Module):
-  def __init__(self, in_dim:int, hidden_dim:int, total_tasks:int):
+  def __init__(self, in_dim:int, hidden_dim:int):
     super().__init__()
     self.in_dim = in_dim
     self.hidden_dim = hidden_dim
-    self.total_tasks = total_tasks
 
     self.down_projections = nn.ModuleList()
     self.up_projections = nn.ModuleList()
 
-    for _ in range(total_tasks):
-      down = nn.Linear(in_dim, hidden_dim, bias = False)
-      up = nn.Linear(hidden_dim, in_dim, bias = False)
-      self.down_projections.append(down)
-      self.up_projections.append(up)
-
     self.relu = nn.ReLU()
-    self.current_task = 0 
+    self.current_task = None
+
+  def add_new_task(self):
+    for i in range(len(self.down_projections)):
+      for param in self.down_projections[i].parameters():
+        param.requires_grad = False
+      for param in self.up_projections[i].parameters():
+        param.requires_grad = False
+
+    down = nn.Linear(self.in_dim, self.hidden_dim, bias = False)
+    up = nn.Linear(self.hidden_dim, self.in_dim, bias = False)
+
+    self.down_projections.append(down)
+    self.up_projections.append(up)
+
+    new_task_id = len(self.down_projections)-1
+    self.current_task = new_task_id
+
+    for param in self.down_projections[new_task_id].parameters():
+      param.requires_grad = True
+    for param in self.up_projections[new_task_id].parameters():
+      param.requires_grad = True
 
   def set_current_task(self, task_id:int):
     self.current_task = task_id
@@ -31,6 +45,9 @@ class ContinualAdapterLayer(nn.Module):
         parameter.requires_grad = is_trainable
 
   def forward(self, x):
+    if self.current_task is None:
+      raise ValueError("No task has been added yet. add_new_task() first")
+    
     down_w = self.down_projections[self.current_task]
     up_w = self.up_projections[self.current_task]
 
