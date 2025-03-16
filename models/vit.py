@@ -68,6 +68,9 @@ class CADA_ViTModel(nn.Module):
 
     self.base_vit = ViTModel.from_pretrained(model_name)
 
+    for param in self.base_vit.parameters():
+      param.requires_grad = False     # freeze backbone
+
     for i, block in enumerate(self.base_vit.encoder.layer):
       wrapped_block = ViTBlockWithCADA(
         original_block=block,
