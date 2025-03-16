@@ -10,3 +10,4 @@ class ScailingAndShifting(nn.Module):
   def forward(self, x):
     out = self.alpha * x + self.beta
     return out
+  
