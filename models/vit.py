@@ -20,27 +20,26 @@ class ViTBlockWithCADA(nn.Module):
     self.cal_mlp.set_current_task(task_id)
 
   def freeze_sns(self):
-    self.sns_frozen = True
     for param in self.sns.parameters():
       param.requires_grad = True
 
   def forward(self, hidden_states, attention_mask = None):
-    if not self.sns_frozen:
-      hidden_states = self.sns(hidden_states)
-      sa_output = self.original_block.attention(     # sa : self attention
-        hidden_states,
-        attention_mask = attention_mask,
-        output_attentions = False
-      )
-      sa_hidden = sa_output[0]
+    sa_out = self.original_block.attention.attention(
+      hidden_states,
+      head_mask = None,
+      output_attentions = False
+    )
+    sa_out = sa_out[0]
+    sns_out = self.sns(sa_out)
+    cal1_out = self.cal_msha(sns_out)
 
-      cal1_out = self.cal_msha(sa_hidden)
-      x_prime = sa_hidden + self.lamda * cal1_out
-      x_prime = self.original_block.layernorm_before_mlp(x_prime)
+    x_l1 = self.original_block.attention.output(sa_out)
+    x_l2 = self.lamda * cal1_out
+    x_prime = x_l1 + x_l2
 
-      mlp_out = self.original_block.mlp(x_prime)
-      cal2_out = self.cal_mlp(x_prime)
-      x_out = mlp_out + self.lamda * cal2_out
+    mlp_out = self.original_block.mlp(x_prime)
+    cal2_out = self.cal_mlp(x_prime)
+    x_out = mlp_out + self.lamda * cal2_out
 
 if __name__ == "__main__":
   model_name = "google/vit-base-patch16-224-in21k"
