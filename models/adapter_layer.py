@@ -37,7 +37,7 @@ class ContinualAdapterLayer(nn.Module):
   def set_current_task(self, task_id:int):
     self.current_task = task_id
 
-    for i in range(self.total_tasks):
+    for i in range(len(self.down_projections)):
       is_trainable = (i == task_id)
       for parameter in self.down_projections[i].parameters():
         parameter.requires_grad = is_trainable
