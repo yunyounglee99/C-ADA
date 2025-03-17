@@ -6,7 +6,7 @@ from models.adapter_layer import ContinualAdapterLayer
 from models.scaling_and_shifting import ScailingAndShifting
 
 class ViTBlockWithCADA(nn.Module):
-  def __init__(self, original_block, embed_dim, hidden_dim):
+  def __init__(self, original_block, embed_dim, hidden_dim, cadablock = True):
     super().__init__()
     self.original_block = original_block
     self.cal_msha = ContinualAdapterLayer(embed_dim, hidden_dim)
@@ -14,20 +14,37 @@ class ViTBlockWithCADA(nn.Module):
     self.lamda = 0.1    # 일부러 스펠링 틀린것
     self.sns = ScailingAndShifting(embed_dim)
     self.sns_frozen = False
+    self.cadablock = cadablock
 
   def add_new_task(self):
+    if not self.cadablock:
+      return
+    
     self.cal_msha.add_new_task()
     self.cal_mlp.add_new_task()
 
+
   def set_current_task(self, task_id):
+    if not self.cadablock:
+      return
     self.cal_msha.set_current_task(task_id)
     self.cal_mlp.set_current_task(task_id)
 
   def freeze_sns(self):
+    if not self.cadablock:
+      return
+    
     for param in self.sns.parameters():
       param.requires_grad = False
 
   def forward(self, hidden_states, attention_mask = None):
+    if not self.cadablock:
+      return self.original_block.forward(
+        hidden_states,
+        head_mask = None,
+        output_attentions=False
+      )[0]
+
     # 1. layer norm
     hidden_states = self.original_block.layernorm_before(hidden_states)
     
@@ -74,13 +91,24 @@ class CADA_ViTModel(nn.Module):
     for param in self.base_vit.parameters():
       param.requires_grad = False     # freeze backbone
 
+    self.cadablock = False
     for i, block in enumerate(self.base_vit.encoder.layer):
-      wrapped_block = ViTBlockWithCADA(
-        original_block=block,
-        embed_dim=embed_dim,
-        hidden_dim=hidden_dim,
-      )
-      self.base_vit.encoder.layer[i] = wrapped_block
+      if i < 5:
+        wrapped_block = ViTBlockWithCADA(
+          original_block=block,
+          embed_dim=embed_dim,
+          hidden_dim=hidden_dim,
+          cadablock=True
+        )
+        self.base_vit.encoder.layer[i] = wrapped_block
+      else:
+        wrapped_block = ViTBlockWithCADA(
+          original_block=block,
+          embed_dim=embed_dim,
+          hidden_dim=hidden_dim,
+          cadablock=False
+        )
+        self.base_vit.encoder.layer[i] = wrapped_block
 
     self.classifier = nn.Linear(embed_dim, num_classes)
     self.current_task = None
