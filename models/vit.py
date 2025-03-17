@@ -64,7 +64,7 @@ class ViTBlockWithCADA(nn.Module):
     x_l2 = self.lamda * cal1_out
     x_prime = x_l1 + x_l2
 
-    # 4. intermediate (IDK exact structure of C-ADA but I just fallow the official ViT's structure)
+    # 4. intermediate (IDK the exact structure of C-ADA but I just fallowed the official ViT's structure)
     x_prime = hidden_states + x_prime
     x_prime = self.original_block.layernorm_after(x_prime)
 
