@@ -34,16 +34,6 @@ class ContinualAdapterLayer(nn.Module):
     for param in self.up_projections[new_task_id].parameters():
       param.requires_grad = True
 
-  def set_current_task(self, task_id:int):
-    self.current_task = task_id
-
-    for i in range(len(self.down_projections)):
-      is_trainable = (i == task_id)
-      for parameter in self.down_projections[i].parameters():
-        parameter.requires_grad = is_trainable
-      for parameter in self.up_projections[i].parameters():
-        parameter.requires_grad = is_trainable
-
   def forward(self, x):
     if self.current_task is None:
       raise ValueError("No task has been added yet. add_new_task() first")
