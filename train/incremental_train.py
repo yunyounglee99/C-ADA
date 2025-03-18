@@ -27,6 +27,8 @@ def extract_task_weight_model(model, task_id):
       dps, ups = extract_task_weight_block(block, task_id)
       dp_list.extend(dps)
       up_list.extend(ups)
+    else:
+      pass
 
   return dp_list, up_list
 
