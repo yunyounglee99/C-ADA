@@ -6,7 +6,7 @@ from torch.utils.data import DataLoader
 from ..models.orthogonal_loss import orthogonal_loss
 from ..models.vit import ViTBlockWithCADA, CADA_ViTModel
 
-# 이 코드 내에서 .extend를 쓰는게 맞는지 생각해보기 각 S&S, CAL 블록별로 Ortho loss를 구해야하지 않을까?
+# 이 코드 내에서 .extend를 쓰는게 맞는지 생각해보기 각 S&S, CAL 블록별로 Ortho loss를 구해야하지 않을까? : 순서만 맞게한다면 상관없을듯
 
 def extract_task_weight_block(block, task_id):
   w_dp_mhsa = block.cal_msha.down_projections[task_id].weight
