@@ -36,6 +36,7 @@ def train_incremental(model, train_loader, task_id, num_epochs, lr, alpha):
   device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
   model.to(device)
 
+  model.add_new_task()
   model.set_current_task(task_id)
   model.freeze_sns()
 
@@ -72,3 +73,5 @@ def train_incremental(model, train_loader, task_id, num_epochs, lr, alpha):
       optimizer.step()
 
       total_loss += total_loss_val.item()
+    avg_loss = total_loss / len(train_loader)
+    print(f"[task {task_id}] epoch {epoch+1}/{num_epochs}, loss = {avg_loss : .4f}")
