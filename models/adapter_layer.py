@@ -14,11 +14,14 @@ class ContinualAdapterLayer(nn.Module):
     self.current_task = None
 
   def add_new_task(self):
-    for i in range(len(self.down_projections)):
-      for param in self.down_projections[i].parameters():
-        param.requires_grad = False
-      for param in self.up_projections[i].parameters():
-        param.requires_grad = False
+    if self.current_task == None:
+      pass
+    else:
+      for i in range(len(self.down_projections)):
+        for param in self.down_projections[i].parameters():
+          param.requires_grad = False
+        for param in self.up_projections[i].parameters():
+          param.requires_grad = False
 
     down = nn.Linear(self.in_dim, self.hidden_dim, bias = False)
     up = nn.Linear(self.hidden_dim, self.in_dim, bias = False)
