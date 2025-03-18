@@ -64,7 +64,7 @@ class ViTBlockWithCADA(nn.Module):
     # 5. MLP part
     mlp_out = self.original_block.intermediate(x_prime)
     mlp_out = self.original_block.output.dense(mlp_out)
-    mlp_out = self.original_block.output.dropout(mlp_out)
+    mlp_out = self.original_block.output.dropout(mlp_out)     # 여기도 마찬가지로 residual을 뻄
     sns_out2 = self.sns(x_prime)
     cal2_out = self.cal_mlp(sns_out2)
     x_out = mlp_out + self.lamda * cal2_out
@@ -110,11 +110,6 @@ class CADA_ViTModel(nn.Module):
   def add_new_task(self):
     for block in self.base_vit.encoder.layer:
       block.add_new_task()
-
-  def set_current_task(self, task_id):
-    self.current_task = task_id
-    for block in self.base_vit.encoder.layer:
-      block.set_current_task(task_id)
       
   def freeze_sns(self):
     for block in self.base_vit.encoder.layer:
