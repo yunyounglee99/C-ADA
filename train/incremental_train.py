@@ -23,10 +23,11 @@ def extract_task_weight_model(model, task_id):
   dp_list  = []
   up_list = []
   for block in model.base_vit.encoder.layer:
-    dps, ups = extract_task_weight_block(block, task_id)
-    dp_list.extend(dps)
-    up_list.extend(ups)
-  
+    if block.cadablock:
+      dps, ups = extract_task_weight_block(block, task_id)
+      dp_list.extend(dps)
+      up_list.extend(ups)
+
   return dp_list, up_list
 
 def train_incremental(model, train_loader, task_id, num_epochs, lr, alpha):
