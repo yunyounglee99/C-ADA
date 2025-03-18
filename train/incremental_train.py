@@ -32,13 +32,13 @@ def extract_task_weight_model(model, task_id):
 
   return dp_list, up_list
 
-def train_incremental(model, train_loader, task_id, num_epochs, lr, alpha):
+def train(model, train_loader, task_id, num_epochs, lr, alpha):
   device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
   model.to(device)
 
   model.add_new_task()
-  model.set_current_task(task_id)
-  model.freeze_sns()
+  if task_id > 0:
+    model.freeze_sns()
 
   optimizer = optim.Adam(model.parameters(), lr)
   ce_loss_fn = nn.CrossEntropyLoss()
@@ -64,9 +64,10 @@ def train_incremental(model, train_loader, task_id, num_epochs, lr, alpha):
       new_dp_list, new_up_list = extract_task_weight_model(model, task_id)
 
       ortho_val = torch.tensor(0.0).to(device)
-      for w_dp in new_dp_list:
-        for w_up in new_up_list:
-          ortho_val += orthogonal_loss(w_dp, w_up, old_dp_list, old_up_list)
+      if task_id > 0:
+        for w_dp in new_dp_list:
+          for w_up in new_up_list:
+            ortho_val += orthogonal_loss(w_dp, w_up, old_dp_list, old_up_list)
 
       total_loss_val = ce_loss + alpha * ortho_val
       total_loss_val.backward()
