@@ -19,16 +19,8 @@ class ViTBlockWithCADA(nn.Module):
   def add_new_task(self):
     if not self.cadablock:
       return
-    
     self.cal_msha.add_new_task()
     self.cal_mlp.add_new_task()
-
-
-  def set_current_task(self, task_id):
-    if not self.cadablock:
-      return
-    self.cal_msha.set_current_task(task_id)
-    self.cal_mlp.set_current_task(task_id)
 
   def freeze_sns(self):
     if not self.cadablock:
@@ -61,6 +53,7 @@ class ViTBlockWithCADA(nn.Module):
     cal1_out = self.cal_msha(sns_out1)
 
     x_l1 = self.original_block.attention.output.dense(sa_out)
+    x_l1 = self.original_block.attention.output.dropout(x_l1)     # residual을 뺄까말까 고민을 아주 많이 했는데 결국에는 뺌
     x_l2 = self.lamda * cal1_out
     x_prime = x_l1 + x_l2
 
@@ -70,7 +63,8 @@ class ViTBlockWithCADA(nn.Module):
 
     # 5. MLP part
     mlp_out = self.original_block.intermediate(x_prime)
-    mlp_out = self.original_block.output(mlp_out, x_prime)
+    mlp_out = self.original_block.output.dense(mlp_out)
+    mlp_out = self.original_block.output.dropout(mlp_out)
     sns_out2 = self.sns(x_prime)
     cal2_out = self.cal_mlp(sns_out2)
     x_out = mlp_out + self.lamda * cal2_out
