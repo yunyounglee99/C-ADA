@@ -19,7 +19,7 @@ def extract_task_weight_block(block, task_id):
 
   return dp_list, up_list
 
-def extract_task_weight_model(model, task_id):
+def extract_task_weight(model, task_id):
   dp_list  = []
   up_list = []
   for block in model.base_vit.encoder.layer:
@@ -47,7 +47,7 @@ def train(model, train_loader, task_id, num_epochs, lr, alpha):
   old_up_list = []
 
   for old_id in range(task_id):
-    dp_list, up_list = extract_task_weight_model(model, old_id)
+    dp_list, up_list = extract_task_weight(model, old_id)
     old_dp_list.extend(dp_list)
     old_up_list.extend(up_list)
 
@@ -61,10 +61,9 @@ def train(model, train_loader, task_id, num_epochs, lr, alpha):
       logits = model(images)
       ce_loss = ce_loss_fn(logits, labels)
 
-      new_dp_list, new_up_list = extract_task_weight_model(model, task_id)
-
       ortho_val = torch.tensor(0.0).to(device)
       if task_id > 0:
+        new_dp_list, new_up_list = extract_task_weight(model, task_id)
         for w_dp in new_dp_list:
           for w_up in new_up_list:
             ortho_val += orthogonal_loss(w_dp, w_up, old_dp_list, old_up_list)
