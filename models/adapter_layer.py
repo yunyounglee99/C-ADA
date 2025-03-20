@@ -41,9 +41,14 @@ class ContinualAdapterLayer(nn.Module):
     if self.current_task is None:
       raise ValueError("No task has been added yet. add_new_task() first")
     
-    down_w = self.down_projections[self.current_task]
-    up_w = self.up_projections[self.current_task]
+    t = len(self.down_projections)
+    out = []
+    for i in range(t):
+      out_i = self.down_projections[i](x)
+      out_i = self.relu(out_i)
+      out_i = self.up_projections[i](x)
+      out.append(out_i)
 
-    out = self.relu(down_w(x))
-    out = up_w(out)
+    out = torch.stack(out, dim = 0)
+    out = out.transpose(0, 1)     #(batch, t, seq_len, in_dim)
     return out
