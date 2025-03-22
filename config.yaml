@@ -1,0 +1,6 @@
+batch_size: 128
+lr: 5e-5
+middle_dim: 60
+num_epochs: 20
+num_classes: 100
+alpha: 0.1
