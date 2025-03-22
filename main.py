@@ -15,7 +15,7 @@ def load_config(config_path):
     return yaml.safe_load(f)
   
 parser = argparse.ArgumentParser()
-parser.add_argument("--config,", type = str, default = "config.yaml")
+parser.add_argument("--config", type = str, default = "config.yaml")
 args = parser.parse_args()
 config = load_config(args.config)
 
