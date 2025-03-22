@@ -29,7 +29,7 @@ def extract_task_weight_model(model, task_id):
   
   return dp_list, up_list
 
-def train_incremental(model, train_loader, task_id, num_epochs, lr, alpha):
+def train_incremental(model, train_loader, task_id, num_epochs, lr, delta):
   device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
   model.to(device)
 
@@ -64,7 +64,7 @@ def train_incremental(model, train_loader, task_id, num_epochs, lr, alpha):
         for w_up in new_up_list:
           ortho_val += orthogonal_loss(w_dp, w_up, old_dp_list, old_up_list)
 
-      total_loss_val = ce_loss + alpha * ortho_val
+      total_loss_val = ce_loss + delta * ortho_val
       total_loss_val.backward()
       optimizer.step()
 
