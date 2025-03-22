@@ -69,3 +69,4 @@ def train_incremental(model, train_loader, task_id, num_epochs, lr, alpha):
       optimizer.step()
 
       total_loss += total_loss_val.item()
+    print(f"Epoch {epoch+1}/{num_epochs}, Loss: {total_loss/len(train_loader):.4f}")
