@@ -58,5 +58,5 @@ train_incremental(
   task_id = 1,
   num_epochs = config['num_epochs'],
   lr = config['lr'],
-  alpha = config['lr']
+  delta = config['lr']
 )
