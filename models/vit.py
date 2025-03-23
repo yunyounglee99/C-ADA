@@ -37,7 +37,7 @@ class ViTBlockWithCADA(nn.Module):
     for param in self.sns.parameters():
       param.requires_grad = False
 
-  def forward(self, hidden_states, attention_mask = None):
+  def forward(self, hidden_states):
     if not self.cadablock:
       return self.original_block.forward(
         hidden_states,
@@ -126,10 +126,9 @@ class CADA_ViTModel(nn.Module):
     for block in self.base_vit.encoder.layer:
       block.freeze_sns()
 
-  def forward(self, pixel_values, attention_mask = None):
+  def forward(self, pixel_values):
     outputs = self.base_vit(
       pixel_values = pixel_values,
-      attention_mask = attention_mask,
       output_attentions = False,
       output_hidden_states = False,
       return_dict = True

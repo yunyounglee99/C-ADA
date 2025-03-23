@@ -8,6 +8,7 @@ from ..models.vit import ViTBlockWithCADA, CADA_ViTModel
 
 def train_first_phase(model, train_loader, num_epochs, lr):
   device = torch.device("cuda" if torch.cuda.is_available() else "cpu") 
+  print(device)
   model.to(device)
 
   model.set_current_task(0)

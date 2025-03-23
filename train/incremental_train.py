@@ -31,6 +31,7 @@ def extract_task_weight_model(model, task_id):
 
 def train_incremental(model, train_loader, task_id, num_epochs, lr, delta):
   device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+  print(device)
   model.to(device)
 
   model.add_new_task()
