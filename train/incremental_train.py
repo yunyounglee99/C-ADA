@@ -74,6 +74,21 @@ def train_incremental(model, train_loader, task_id, num_epochs, lr, delta):
       total_loss += total_loss_val.item()
     print(f"Epoch {epoch+1}/{num_epochs}, Loss: {total_loss/len(train_loader):.4f}")
 
+def evaluate_task(model, test_loader):
+  device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+  model.eval()
+  correct = 0
+  total = 0
+  with torch.no_grad():
+    for images, labels in test_loader:
+      images, labels = images.to(device), labels.to(device)
+      logits = model(images)
+      preds = logits.argmax(dim=1)
+      correct += (preds == labels).sum().item()
+      total += labels.size(0)
+  acc = 100.0 * correct / total if total > 0 else 0.0
+  return acc
+
 def select_class_subset(dataset, class_list):
   indices = [i for i, target in enumerate(dataset.targets) if target in class_list]
   return Subset(dataset, indices)
