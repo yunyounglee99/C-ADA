@@ -2,5 +2,4 @@ batch_size: 128
 lr: 0.00005
 middle_dim: 60
 num_epochs: 20
-num_classes: 100
 delta: 1
