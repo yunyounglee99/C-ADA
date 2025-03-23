@@ -1,13 +1,12 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, Subset
 
 from models.orthogonal_loss import orthogonal_loss
 from models.vit import ViTBlockWithCADA, CADA_ViTModel
 
 # 이 코드 내에서 .extend를 쓰는게 맞는지 생각해보기 각 S&S, CAL 블록별로 Ortho loss를 구해야하지 않을까? : 순서만 맞게한다면 상관없을듯
-
 def extract_task_weight_block(block, task_id):
   w_dp_mhsa = block.cal_msha.down_projections[task_id].weight
   w_up_mhsa = block.cal_msha.up_projections[task_id].weight
@@ -74,3 +73,23 @@ def train_incremental(model, train_loader, task_id, num_epochs, lr, delta):
 
       total_loss += total_loss_val.item()
     print(f"Epoch {epoch+1}/{num_epochs}, Loss: {total_loss/len(train_loader):.4f}")
+
+def select_class_subset(dataset, class_list):
+  indices = [i for i, target in enumerate(dataset.targets) if target in class_list]
+  return Subset(dataset, indices)
+
+def create_task_dataloaders(train_dataset, test_dataset, task_splits, batch_size):
+  train_loaders = []
+  test_loaders = []
+
+  for classes in task_splits:
+    train_subset = select_class_subset(train_dataset, classes)
+    train_loader = DataLoader(train_subset, batch_size, shuffle = True, num_workers=2)
+
+    test_subset = select_class_subset(test_dataset, classes)
+    test_loader = DataLoader(test_subset, batch_size, shuffle = False, num_workers=2)
+
+    train_loaders.append(train_loader)
+    test_loaders.append(test_loader)
+
+  return train_loaders, test_loaders
