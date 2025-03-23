@@ -5,6 +5,7 @@ from torch.utils.data import DataLoader, Subset
 
 from models.orthogonal_loss import orthogonal_loss
 from models.vit import ViTBlockWithCADA, CADA_ViTModel
+from tqdm import tqdm
 
 # 이 코드 내에서 .extend를 쓰는게 맞는지 생각해보기 각 S&S, CAL 블록별로 Ortho loss를 구해야하지 않을까? : 순서만 맞게한다면 상관없을듯
 def extract_task_weight_block(block, task_id):
@@ -51,7 +52,7 @@ def train_incremental(model, train_loader, task_id, num_epochs, lr, delta):
     old_up_list.extend(up_list)
 
   model.train()
-  for epoch in range(num_epochs):
+  for epoch in tqdm(range(num_epochs)):
     total_loss = 0.0
     for images, labels in train_loader:
       images, labels = images.to(device), labels.to(device)
