@@ -37,12 +37,12 @@ class ViTBlockWithCADA(nn.Module):
     for param in self.sns.parameters():
       param.requires_grad = False
 
-  def forward(self, hidden_states):
+  def forward(self, hidden_states, head_mask=None, output_attention=False):
     if not self.cadablock:
       return self.original_block.forward(
         hidden_states,
-        head_mask = None,
-        output_attentions=False
+        head_mask = head_mask,
+        output_attentions=output_attention
       )[0]
 
     # 1. layer norm
