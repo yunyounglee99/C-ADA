@@ -9,7 +9,7 @@ import torchvision.transforms as transforms
 
 from models.orthogonal_loss import orthogonal_loss
 from models.vit import CADA_ViTModel, ViTBlockWithCADA
-from train.incremental_train import train_incremental
+from train.incremental_train import train_incremental, create_task_dataloaders
 
 def load_config(config_path):
   with open(config_path, "r") as f:
@@ -19,11 +19,6 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--config", type = str, default = "config.yaml")
 args = parser.parse_args()
 config = load_config(args.config)
-
-def select_class_subset(dataset, class_list):
-  indices = [i for i, target in enumerate(dataset.targets) if target in class_list]
-  return Subset(dataset, indices)
-
 
 all_classes = list(range(100))
 # random.shuffle(all_classes)
@@ -63,12 +58,16 @@ test_dataset = torchvision.datasets.CIFAR100(
   transform = transform_test
 )
 
-train_loader = DataLoader(train_dataset, batch_size=config['batch_size'], shuffle=True, num_workers=2)
-test_loader = DataLoader(test_dataset, batch_size=config['batch_size'], shuffle=False, num_workers=2)
+train_loaders, test_loaders = create_task_dataloaders(
+  train_dataset,
+  test_dataset,
+  task_splits,
+  batch_size = config['batch_size']
+)
 
 model = CADA_ViTModel(
   hidden_dim = config['middle_dim'],
-  num_classes = config['num_classes'],
+  num_classes = num_classes,
   model_name="google/vit-base-patch16-224-in21k"
 )
 train_incremental(
