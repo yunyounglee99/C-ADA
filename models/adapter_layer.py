@@ -20,6 +20,7 @@ class ContinualAdapterLayer(nn.Module):
       for param in self.up_projections[i].parameters():
         param.requires_grad = False
 
+    device = next(self.parameters()).device
     down = nn.Linear(self.in_dim, self.hidden_dim, bias = False)
     up = nn.Linear(self.hidden_dim, self.in_dim, bias = False)
 
