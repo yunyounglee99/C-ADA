@@ -33,6 +33,10 @@ def train_incremental(model, train_loader, task_id, num_epochs, lr, delta):
   device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
   model.to(device)
 
+  model.add_new_task()
+  if task_id > 0:
+    model.freeze_sns()
+
   model.set_current_task(task_id)
   model.freeze_sns()
 
