@@ -9,7 +9,7 @@ import torchvision.transforms as transforms
 
 from models.orthogonal_loss import orthogonal_loss
 from models.vit import CADA_ViTModel, ViTBlockWithCADA
-from train.incremental_train import train_incremental, create_task_dataloaders
+from train.incremental_train import train_incremental, create_task_dataloaders, evaluate_task
 
 def load_config(config_path):
   with open(config_path, "r") as f:
@@ -70,11 +70,19 @@ model = CADA_ViTModel(
   num_classes = num_classes,
   model_name="google/vit-base-patch16-224-in21k"
 )
-train_incremental(
-  model = model,
-  train_loader = train_loader,
-  task_id = 0,
-  num_epochs = config['num_epochs'],
-  lr = config['lr'],
-  delta = config['delta']
-)
+
+for task_id in range(num_tasks):
+  print(f"\n=== Train task {task_id}=====================")
+  train_loader_i =train_loaders[task_id]
+  train_incremental(
+    model = model,
+    train_loader = train_loader_i,
+    task_id = task_id,
+    num_epochs = config['num_epochs'],
+    lr = config['lr'],
+    delta = config['delta']
+  )
+
+  test_loader_i = test_loaders[task_id]
+  acc = evaluate_task(model, test_loader_i)
+  print(f"Task {task_id} Test Acc : {acc:.2f}%")
