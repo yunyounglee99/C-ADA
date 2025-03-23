@@ -1,8 +1,9 @@
 import torch
 import yaml
+import random
 import argparse
 import torch.nn as nn
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, Subset
 import torchvision 
 import torchvision.transforms as transforms
 
@@ -19,13 +20,31 @@ parser.add_argument("--config", type = str, default = "config.yaml")
 args = parser.parse_args()
 config = load_config(args.config)
 
+def select_class_subset(dataset, class_list):
+  indices = [i for i, target in enumerate(dataset.targets) if target in class_list]
+  return Subset(dataset, indices)
+
+
+all_classes = list(range(100))
+# random.shuffle(all_classes)
+
+num_tasks = 10
+num_classes = 10
+
+task_splits = []
+for i in range(num_tasks):
+  start = i * num_classes
+  end = (i+1) * num_classes
+  task_classes = all_classes[start:end]
+  task_splits.append(task_classes)
+
 transform_train = transforms.Compose([
   transforms.Resize((224,224)),
   transforms.RandomHorizontalFlip(),
   transforms.ToTensor(),
   transforms.Normalize((0.5071, 0.4867, 0.4408), (0.2675, 0.2565, 0.2761))
 ])
-transform_test = transforms([
+transform_test = transforms.Compose([
   transforms.Resize((224, 224)),
   transforms.ToTensor(),
   transforms.Normalize((0.5071, 0.4867, 0.4408), (0.2675, 0.2565, 0.2761))
@@ -50,13 +69,13 @@ test_loader = DataLoader(test_dataset, batch_size=config['batch_size'], shuffle=
 model = CADA_ViTModel(
   hidden_dim = config['middle_dim'],
   num_classes = config['num_classes'],
-  model_name="google/vit-base-patch16-224-in21"
+  model_name="google/vit-base-patch16-224-in21k"
 )
 train_incremental(
   model = model,
   train_loader = train_loader,
-  task_id = 1,
+  task_id = 0,
   num_epochs = config['num_epochs'],
   lr = config['lr'],
-  delta = config['lr']
+  delta = config['delta']
 )
