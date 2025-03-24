@@ -46,6 +46,7 @@ class ContinualAdapterLayer(nn.Module):
         parameter.requires_grad = is_trainable
 
   def forward(self, x):
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     if self.current_task is None:
       raise ValueError("No task has been added yet. add_new_task() first")
     
@@ -59,8 +60,8 @@ class ContinualAdapterLayer(nn.Module):
     else:
       raise ValueError(f"unexpected input shape : {x.shape}")
     
-    W_dp = torch.stack([p.weight for p in self.down_projections], dim = 0)      #(T, D, d)
-    W_up = torch.stack([p.weight for p in self.up_projections], dim = 0)     #(T, d, D)
+    W_dp = torch.stack([p.weight for p in self.down_projections], dim = 0).to(device)      #(T, D, d)
+    W_up = torch.stack([p.weight for p in self.up_projections], dim = 0).to(device)     #(T, d, D)
 
     out = torch.einsum('btsd, tdh -> btsh', x, W_dp)
     out = self.relu(out)
