@@ -65,6 +65,6 @@ class ContinualAdapterLayer(nn.Module):
 
     out = torch.einsum('btsd, tdh -> btsh', x, W_dp)
     out = self.relu(out)
-    out = torch.einsum('btsh, thd -> btsh', out, W_up)
+    out = torch.einsum('btsh, thd -> btsd', out, W_up)
   
     return out
