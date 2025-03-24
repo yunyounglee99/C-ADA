@@ -134,7 +134,7 @@ class CADA_ViTModel(nn.Module):
       return_dict = True
     )
     last_hidden_state = outputs.last_hidden_state
-    cls_token = last_hidden_state[:,0,:]
+    cls_token = last_hidden_state[:,:,0,:]
     logits = self.classifier(cls_token)
 
 if __name__ == "__main__":
