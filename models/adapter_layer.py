@@ -54,8 +54,8 @@ class ContinualAdapterLayer(nn.Module):
     else:
       raise ValueError(f"unexpected input shape : {x.shape}")
     
-    W_dp = torch.stack([p.weight for p in self.down_projections], dim = 0).to(device)      #(T, D, d)
-    W_up = torch.stack([p.weight for p in self.up_projections], dim = 0).to(device)     #(T, d, D)
+    W_dp = torch.cat(self.down_projections, dim = 0).to(device)      #(T, D, d)
+    W_up = torch.cat(self.up_projections, dim = 0).to(device)     #(T, d, D)
 
     out = torch.einsum('btsd, tdh -> btsh', x, W_dp)
     out = self.relu(out)
