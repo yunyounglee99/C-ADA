@@ -9,6 +9,9 @@ from tqdm import tqdm
 
 # 이 코드 내에서 .extend를 쓰는게 맞는지 생각해보기 각 S&S, CAL 블록별로 Ortho loss를 구해야하지 않을까? : 순서만 맞게한다면 상관없을듯
 def extract_task_weight_block(block, task_id):
+  if not block.cadablock:
+    return [], []
+  
   w_dp_mhsa = block.cal_msha.down_projections[task_id]
   w_up_mhsa = block.cal_msha.up_projections[task_id]
   w_dp_mlp = block.cal_mlp.down_projections[task_id]
@@ -39,7 +42,6 @@ def train_incremental(model, train_loader, task_id, num_epochs, lr, delta):
     model.freeze_sns()
 
   model.set_current_task(task_id)
-  model.freeze_sns()
 
   optimizer = optim.Adam(model.parameters(), lr)
   ce_loss_fn = nn.CrossEntropyLoss()
