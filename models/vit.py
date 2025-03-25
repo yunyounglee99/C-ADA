@@ -66,7 +66,7 @@ class ViTBlockWithCADA(nn.Module):
     x_l1 = self.original_block.attention.output.dense(sa_out)
     x_l2 = self.lamda * cal1_out
     x_prime = x_l1 + x_l2
-    print(f"x prime : {x_prime.size}")
+    print(f"x prime : {x_prime.size()}")
 
     # 4. intermediate (IDK the exact structure of C-ADA but I just fallowed the official ViT's structure)
     x_prime = hidden_states + x_prime
@@ -75,9 +75,13 @@ class ViTBlockWithCADA(nn.Module):
     # 5. MLP part
     mlp_out = self.original_block.intermediate(x_prime)
     mlp_out = self.original_block.output(mlp_out, x_prime)
+    print(f"mlp out : {mlp_out.size()}")    
     sns_out2 = self.sns(x_prime)
+    print(f"sns2 out : {sns_out2.size()}")
     cal2_out = self.cal_mlp(sns_out2)
+    print(f"cal2 out : {cal2_out.size()}")
     x_out = mlp_out + self.lamda * cal2_out
+    print(f"out : {x_out.size()}")
 
     return x_out
 
