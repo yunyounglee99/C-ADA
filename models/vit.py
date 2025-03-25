@@ -46,7 +46,9 @@ class ViTBlockWithCADA(nn.Module):
       )[0]
 
     # 1. layer norm
+    print(f'before hidden : {hidden_states.size()}')
     hidden_states = self.original_block.layernorm_before(hidden_states)
+    print(f'before attention hidden : {hidden_states.size()}')
     
     # 2. attention block
     sa_out = self.original_block.attention.attention(
@@ -84,7 +86,7 @@ class ViTBlockWithCADA(nn.Module):
     x_out = mlp_out + self.lamda * cal2_out
     print(f"out : {x_out.size()}")
 
-    return x_out
+    return (x_out,)
 
 class CADA_ViTModel(nn.Module):
   def __init__(self,
