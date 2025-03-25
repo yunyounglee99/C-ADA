@@ -62,6 +62,11 @@ def train_incremental(model, train_loader, task_id, num_epochs, lr, delta):
 
       optimizer.zero_grad()
       logits = model(images)
+
+      if task_id > 0:
+        old_classes = task_id * 10
+        logits[:, :old_classes] = float('-inf')
+
       ce_loss = ce_loss_fn(logits, labels)
 
       new_dp_list, new_up_list = extract_task_weight_model(model, task_id)
