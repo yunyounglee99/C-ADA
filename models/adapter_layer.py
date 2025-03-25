@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 
-def QR_init(state:str, new_param:nn.Parameter, old_params:list[nn.Parameter]):
+def QR_init(new_param:nn.Parameter, old_params:list[nn.Parameter]):
   with torch.no_grad():
     if len(old_params) == 0:
       return
@@ -41,6 +41,9 @@ class ContinualAdapterLayer(nn.Module):
     
     down = nn.Parameter(torch.randn(self.in_dim, self.hidden_dim))
     up = nn.Parameter(torch.randn(self.hidden_dim, self.in_dim))
+
+    QR_init(down, self.down_projections)
+    QR_init(up, self.up_projections)
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     self.down_projections.append(down).to(device)
