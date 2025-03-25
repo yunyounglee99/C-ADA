@@ -67,7 +67,7 @@ class ViTBlockWithCADA(nn.Module):
     cal1_out = self.cal_msha(sns_out1)
     print(f"cal out : {cal1_out.size()}")
 
-    x_l1 = self.original_block.attention.output(sa_out)
+    x_l1 = self.original_block.attention.output(sa_out, hidden_states)
     x_l2 = self.lamda * cal1_out
     x_prime = x_l1 + x_l2
     print(f"x prime : {x_prime.size()}")
@@ -78,8 +78,8 @@ class ViTBlockWithCADA(nn.Module):
 
     # 5. MLP part
     mlp_out = self.original_block.intermediate(x_prime)
-    mlp_out = self.original_block.output.dense(mlp_out, x_prime)
-    mlp_out = self.original_block.output.dropout(mlp_out, x_prime)
+    mlp_out = self.original_block.output.dense(mlp_out)
+    mlp_out = self.original_block.output.dropout(mlp_out)
     print(f"mlp out : {mlp_out.size()}")    
     sns_out2 = self.sns(x_prime)
     print(f"sns2 out : {sns_out2.size()}")
