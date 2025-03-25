@@ -56,6 +56,7 @@ class ViTBlockWithCADA(nn.Module):
     )
     sa_out = sa_out[0]
     print(f"sa_out : {sa_out.size()}")
+    print(f"sparse or not {sa_out.is_sparse}")
 
     # 3. S&S, CAL
     sns_out1 = self.sns(sa_out)
