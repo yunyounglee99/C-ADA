@@ -39,11 +39,12 @@ class ViTBlockWithCADA(nn.Module):
 
   def forward(self, hidden_states, head_mask=None, output_attention=False):
     if not self.cadablock:
-      return self.original_block.forward(
+      out = self.original_block.forward(
         hidden_states,
         head_mask = head_mask,
         output_attentions=output_attention
       )[0]
+      return (out,)
 
     # 1. layer norm
     print(f'before hidden : {hidden_states.size()}')
