@@ -78,8 +78,8 @@ class ViTBlockWithCADA(nn.Module):
 
     # 5. MLP part
     mlp_out = self.original_block.intermediate(x_prime)
-    mlp_out = self.original_block.output.dense(mlp_out)
-    mlp_out = self.original_block.output.dropout(mlp_out)
+    mlp_out = self.original_block.output.dense(mlp_out, x_prime)
+    mlp_out = self.original_block.output.dropout(mlp_out, x_prime)
     print(f"mlp out : {mlp_out.size()}")    
     sns_out2 = self.sns(x_prime)
     print(f"sns2 out : {sns_out2.size()}")
