@@ -50,7 +50,7 @@ class ViTBlockWithCADA(nn.Module):
     
     # 2. attention block
     sa_out = self.original_block.attention.attention(
-      hidden_states,
+      hidden_states.contiguous(),
       head_mask = None,
       output_attentions = False
     )
