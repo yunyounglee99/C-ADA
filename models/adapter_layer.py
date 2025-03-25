@@ -1,6 +1,24 @@
 import torch
 import torch.nn as nn
 
+def QR_init(state:str, new_param:nn.Parameter, old_params:list[nn.Parameter]):
+  with torch.no_grad():
+    if len(old_params) == 0:
+      return
+    old_list = [p.data for p in old_params]
+    M = torch.cat(old_list, dim = 1)
+
+    Q, R = torch.linalg.qr(M, mode = 'reduced')
+    W_new = new_param.data
+    proj = Q.T @ W_new
+    W_orth = W_new - Q @ proj
+
+    Q2, R2 = torch.linalg.qr(W_orth, model = 'reduced')
+    W_final = Q2[:, :W_orth.size(1)]
+
+    new_param.data.copy_(W_final)
+
+
 class ContinualAdapterLayer(nn.Module):
   def __init__(self, in_dim:int, hidden_dim:int):
     super().__init__()
@@ -18,6 +36,9 @@ class ContinualAdapterLayer(nn.Module):
       self.down_projections[i].requires_grad = False
       self.up_projections[i].requires_grad = False
 
+    # print(f"length down before adding weight : {len(self.down_projections)}")
+    # print(f"length up before adding weight : {len(self.up_projections)}")
+    
     down = nn.Parameter(torch.randn(self.in_dim, self.hidden_dim))
     up = nn.Parameter(torch.randn(self.hidden_dim, self.in_dim))
 
@@ -30,6 +51,9 @@ class ContinualAdapterLayer(nn.Module):
 
     self.down_projections[new_task_id].requires_grad = True
     self.up_projections[new_task_id].requires_grad = True
+
+    # print(f"length down before adding weight : {len(self.down_projections)}")
+    # print(f"length up before adding weight : {len(self.up_projections)}")
 
   def set_current_task(self, task_id:int):
     self.current_task = task_id
