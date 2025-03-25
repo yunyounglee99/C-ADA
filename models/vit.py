@@ -6,11 +6,11 @@ from models.adapter_layer import ContinualAdapterLayer
 from models.scaling_and_shifting import ScailingAndShifting
 
 class ViTBlockWithCADA(nn.Module):
-  def __init__(self, original_block, embed_dim, hidden_dim, cadablock = True):
+  def __init__(self, original_block, embed_dim, hidden_dim_msha, hidden_dim_mlp, cadablock = True):
     super().__init__()
     self.original_block = original_block
-    self.cal_msha = ContinualAdapterLayer(embed_dim, hidden_dim)
-    self.cal_mlp = ContinualAdapterLayer(embed_dim, hidden_dim)
+    self.cal_msha = ContinualAdapterLayer(embed_dim, hidden_dim_msha)
+    self.cal_mlp = ContinualAdapterLayer(embed_dim, hidden_dim_mlp)
     self.lamda = 0.1    # 일부러 스펠링 틀린것
     self.sns = ScailingAndShifting(embed_dim)
     self.sns_frozen = False
@@ -79,7 +79,8 @@ class ViTBlockWithCADA(nn.Module):
 
 class CADA_ViTModel(nn.Module):
   def __init__(self,
-              hidden_dim,
+              hidden_dim_msha,
+              hidden_dim_mlp,
               num_classes,
               model_name = "google/vit-base-patch16-224-in21k"):
     super().__init__()
@@ -97,7 +98,8 @@ class CADA_ViTModel(nn.Module):
         wrapped_block = ViTBlockWithCADA(
           original_block=block,
           embed_dim=embed_dim,
-          hidden_dim=hidden_dim,
+          hidden_dim_msha=hidden_dim_msha,
+          hidden_dim_mlp=hidden_dim_mlp,
           cadablock=True
         )
         self.base_vit.encoder.layer[i] = wrapped_block
@@ -105,7 +107,8 @@ class CADA_ViTModel(nn.Module):
         wrapped_block = ViTBlockWithCADA(
           original_block=block,
           embed_dim=embed_dim,
-          hidden_dim=hidden_dim,
+          hidden_dim_msha=hidden_dim_msha,
+          hidden_dim_mlp=hidden_dim_mlp,
           cadablock=False
         )
         self.base_vit.encoder.layer[i] = wrapped_block
