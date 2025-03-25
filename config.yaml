@@ -1,5 +1,6 @@
 batch_size: 128
 lr: 0.00005
-middle_dim: 60
+hidden_dim_mhsa: 40
+hidden_dim_mlp: 20
 num_epochs: 20
 delta: 1
