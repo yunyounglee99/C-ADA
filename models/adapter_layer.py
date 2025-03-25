@@ -44,24 +44,12 @@ class ContinualAdapterLayer(nn.Module):
     if self.current_task is None:
       raise ValueError("No task has been added yet. add_new_task() first")
     
-    if x.dim() == 3:
-      B, S, D = x.shape
-      T = len(self.down_projections)
-      x = x.unsqueeze(1).expand(-1, T, -1, -1)
-    elif x.dim() == 4:
-      T = len(self.down_projections)
-
-    else:
-      raise ValueError(f"unexpected input shape : {x.shape}")
-    
     W_dp_list = [p for p in self.down_projections]
     W_up_list = [p for p in self.up_projections]
     
-    W_dp = torch.stack(W_dp_list, dim = 0).to(device)      #(T, D, d)
-    W_up = torch.stack(W_up_list, dim = 0).to(device)     #(T, d, D)
+    W_dp = torch.cat(W_dp_list, dim = 1).to(device)      #(D, t*d)
+    W_up = torch.cat(W_up_list, dim = 0).to(device)     #(t*d, D)
 
-    out = torch.einsum('btsd, tdh -> btsh', x, W_dp)
-    out = self.relu(out)
-    out = torch.einsum('btsh, thd -> btsd', out, W_up)
+    out = self.relu(x @ W_dp) @ W_up
   
     return out
