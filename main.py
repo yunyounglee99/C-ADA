@@ -66,7 +66,8 @@ train_loaders, test_loaders = create_task_dataloaders(
 )
 
 model = CADA_ViTModel(
-  hidden_dim = config['middle_dim'],
+  hidden_dim_msha = config['hidden_dim_msha'],
+  hidden_dim_mlp = config['hidden_dim_mlp'],
   num_classes = num_classes,
   model_name="google/vit-base-patch16-224-in21k"
 )
