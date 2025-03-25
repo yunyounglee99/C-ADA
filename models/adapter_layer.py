@@ -7,21 +7,19 @@ class ContinualAdapterLayer(nn.Module):
     self.in_dim = in_dim
     self.hidden_dim = hidden_dim
 
-    self.down_projections = nn.ModuleList()
-    self.up_projections = nn.ModuleList()
+    self.down_projections = nn.ParameterList()
+    self.up_projections = nn.ParameterList()
 
     self.relu = nn.ReLU()
     self.current_task = None
 
   def add_new_task(self):
     for i in range(len(self.down_projections)):
-      for param in self.down_projections[i].parameters():
-        param.requires_grad = False
-      for param in self.up_projections[i].parameters():
-        param.requires_grad = False
+      self.down_projections[i].requires_grad = False
+      self.up_projections[i].requires_grad = False
 
-    down = nn.Linear(self.in_dim, self.hidden_dim, bias = False)
-    up = nn.Linear(self.hidden_dim, self.in_dim, bias = False)
+    down = nn.Parameter(torch.randn(self.in_dim, self.hidden_dim))
+    up = nn.Parameter(torch.randn(self.hidden_dim, self.in_dim))
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     self.down_projections.append(down).to(device)
@@ -30,20 +28,16 @@ class ContinualAdapterLayer(nn.Module):
     new_task_id = len(self.down_projections)-1
     self.current_task = new_task_id
 
-    for param in self.down_projections[new_task_id].parameters():
-      param.requires_grad = True
-    for param in self.up_projections[new_task_id].parameters():
-      param.requires_grad = True
+    self.down_projections[new_task_id].requires_grad = True
+    self.up_projections[new_task_id].requires_grad = True
 
   def set_current_task(self, task_id:int):
     self.current_task = task_id
 
     for i in range(len(self.down_projections)):
       is_trainable = (i == task_id)
-      for parameter in self.down_projections[i].parameters():
-        parameter.requires_grad = is_trainable
-      for parameter in self.up_projections[i].parameters():
-        parameter.requires_grad = is_trainable
+      self.down_projections[i].requires_grad = is_trainable
+      self.up_projections[i].requires_grad = is_trainable
 
   def forward(self, x):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
