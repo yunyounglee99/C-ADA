@@ -151,6 +151,7 @@ class CADA_ViTModel(nn.Module):
     last_hidden_state = outputs.last_hidden_state
     cls_token = last_hidden_state[:,0,:]
     logits = self.classifier(cls_token)
+    return logits
 
 if __name__ == "__main__":
   model_name = "google/vit-base-patch16-224-in21k"
