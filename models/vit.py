@@ -47,9 +47,7 @@ class ViTBlockWithCADA(nn.Module):
       return (out,)
 
     # 1. layer norm
-    # print(f'before hidden : {hidden_states.size()}')
     hidden_states = self.original_block.layernorm_before(hidden_states)
-    # print(f'before attention hidden : {hidden_states.size()}')
     
     # 2. attention block
     sa_out = self.original_block.attention.attention(
@@ -58,35 +56,28 @@ class ViTBlockWithCADA(nn.Module):
       output_attentions = False
     )
     sa_out = sa_out[0]
-    # print(f"sa_out : {sa_out.size()}")
-    # print(f"sparse or not {sa_out.is_sparse}")
 
     # 3. S&S, CAL
     sns_out1 = self.sns(sa_out)
-    # print(f"sns_out : {sns_out1.size()}")
     cal1_out = self.cal_msha(sns_out1)
-    # print(f"cal out : {cal1_out.size()}")
 
     x_l1 = self.original_block.attention.output(sa_out, hidden_states)
     x_l2 = self.lamda * cal1_out
     x_prime = x_l1 + x_l2
-    # print(f"x prime : {x_prime.size()}")
 
     # 4. intermediate (IDK the exact structure of C-ADA but I just fallowed the official ViT's structure)
-    x_prime = hidden_states + x_prime
+    # x_prime = hidden_states + x_prime     # 1st residual connection
     x_prime = self.original_block.layernorm_after(x_prime)
 
     # 5. MLP part
     mlp_out = self.original_block.intermediate(x_prime)
-    mlp_out = self.original_block.output.dense(mlp_out)
+    mlp_out = self.original_block.output.dense(mlp_out)     # 2nd residual connection
     mlp_out = self.original_block.output.dropout(mlp_out)
-    # print(f"mlp out : {mlp_out.size()}")    
+
     sns_out2 = self.sns(x_prime)
-    # print(f"sns2 out : {sns_out2.size()}")
     cal2_out = self.cal_mlp(sns_out2)
-    # print(f"cal2 out : {cal2_out.size()}")
     x_out = mlp_out + self.lamda * cal2_out
-    # print(f"out : {x_out.size()}")
+
 
     return (x_out,)
 
@@ -149,12 +140,14 @@ class CADA_ViTModel(nn.Module):
       output_hidden_states = False,
       return_dict = True
     )
-    last_hidden_state = outputs.last_hidden_state
-    cls_token = last_hidden_state[:,0,:]
-    logits = self.classifier(cls_token)
+    output = outputs.pooler_output
+    logits = self.classifier(output)
     return logits
 
+'''
 if __name__ == "__main__":
   model_name = "google/vit-base-patch16-224-in21k"
   model = ViTModel.from_pretrained(model_name)
   print(model)
+
+'''

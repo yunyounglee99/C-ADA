@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
+from torch.optim.lr_scheduler import CosineAnnealingLR
 from torch.utils.data import DataLoader, Subset
 
 from models.orthogonal_loss import orthogonal_loss
@@ -43,7 +44,8 @@ def train_incremental(model, train_loader, task_id, num_epochs, lr, delta):
 
   model.set_current_task(task_id)
 
-  optimizer = optim.Adam(model.parameters(), lr)
+  optimizer = optim.Adam(model.parameters(), lr = lr)
+  scheduler = CosineAnnealingLR(optimizer, T_max=num_epochs, eta_min = 1e-5)
   ce_loss_fn = nn.CrossEntropyLoss()
 
   old_dp_list = []
@@ -77,12 +79,12 @@ def train_incremental(model, train_loader, task_id, num_epochs, lr, delta):
           ortho_val += orthogonal_loss(w_dp, w_up, old_dp_list, old_up_list)
 
       total_loss_val = ce_loss + delta * ortho_val
-      print(f"total loss : {total_loss_val}, ce_loss : {ce_loss}, ortho_loss : {ortho_val}")
+      # print(f"total loss : {total_loss_val}, ce_loss : {ce_loss}, ortho_loss : {ortho_val}")
       total_loss_val.backward()
       optimizer.step()
 
       total_loss += total_loss_val.item()
-    print(f"Epoch {epoch+1}/{num_epochs}, Loss: {total_loss/len(train_loader):.4f}")
+    print(f"Epoch {epoch+1}/{num_epochs}, Total Loss: {total_loss/len(train_loader):.4f}")
 
 def evaluate_task(model, test_loader):
   device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

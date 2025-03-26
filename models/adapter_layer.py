@@ -8,7 +8,6 @@ def QR_init(
     old_params: nn.ParameterList
 ):
   with torch.no_grad():
-    print(new_param.shape[1], new_param.shape[0])
     is_down = new_param.shape[1] < new_param.shape[0]    
     if not old_params:
       if is_down:
@@ -22,7 +21,10 @@ def QR_init(
     if is_down:      # down
       V = torch.cat([p for p in old_params], dim = 1)
       R = torch.randn_like(new_param)
-      proj = V @ torch.linalg.solve(V.T @ V, V.T @ R)
+
+      VTV = V.T @ V
+      reg = 1e-6 * torch.eye(VTV.shape[0], device=VTV.device)
+      proj = V @ torch.linalg.solve(VTV + reg, V.T @ R)
       R_orth = R - proj
 
       Q, _ = torch.linalg.qr(R_orth)
@@ -31,13 +33,15 @@ def QR_init(
     else:     # up
       U = torch.cat([p for p in old_params], dim = 0)
       R = torch.randn_like(new_param)
-      proj = (R @ U.T) @ torch.linalg.solve(U @ U.T, U)
-      R_orth = R - proj
 
+      UUT = U @ U.T
+      reg = 1e-6 * torch.eye(UUT.shape[0], device=UUT.device)
+      proj = (R @ U.T) @ torch.linalg.solve(UUT + reg, U)
+      R_orth = R - proj
+      
       R_t = R_orth.T
-      Q_t, _ = torch.linalg.qr(R_t, mode = 'reduced')
-      Q = Q_t.T
-      new_param.data = Q
+      Q_t, _ = torch.linalg.qr(R_t, mode='reduced')
+      new_param.data = Q_t.T
 
 class ContinualAdapterLayer(nn.Module):
   def __init__(self, in_dim:int, hidden_dim:int):
