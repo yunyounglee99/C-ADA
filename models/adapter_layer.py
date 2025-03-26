@@ -1,26 +1,43 @@
 import torch
 import torch.nn as nn
 
-def QR_init(new_param:nn.Parameter, old_params:list[nn.Parameter]):
+import torch
+
+def QR_init(
+    new_param: torch.nn.Parameter,
+    old_params: nn.ParameterList
+):
   with torch.no_grad():
-    if len(old_params) == 0:
+    print(new_param.shape[1], new_param.shape[0])
+    is_down = new_param.shape[1] < new_param.shape[0]    
+    if not old_params:
+      if is_down:
+        Q, _ = torch.linalg.qr(torch.randn(*new_param.shape, device = new_param.device), mode = 'reduced')
+        new_param.data = Q
+      else:
+        Q, _ = torch.linalg.qr(torch.randn(*new_param.shape, device=new_param.device).T, mode = 'reduced')
+        new_param.data = Q.T
       return
-    
-    device = new_param.data.device
 
-    old_list = [p.data for p in old_params]
-    M = torch.cat(old_list, dim = 1).to(device)
+    if is_down:      # down
+      V = torch.cat([p for p in old_params], dim = 1)
+      R = torch.randn_like(new_param)
+      proj = V @ torch.linalg.solve(V.T @ V, V.T @ R)
+      R_orth = R - proj
 
-    Q, R = torch.linalg.qr(M, mode = 'reduced')
-    W_new = new_param.data
-    proj = Q.T @ W_new
-    W_orth = W_new - Q @ proj
+      Q, _ = torch.linalg.qr(R_orth)
+      new_param.data = Q
 
-    Q2, R2 = torch.linalg.qr(W_orth, model = 'reduced')
-    W_final = Q2[:, :W_orth.size(1)]
+    else:     # up
+      U = torch.cat([p for p in old_params], dim = 0)
+      R = torch.randn_like(new_param)
+      proj = (R @ U.T) @ torch.linalg.solve(U @ U.T, U)
+      R_orth = R - proj
 
-    new_param.data.copy_(W_final)
-
+      R_t = R_orth.T
+      Q_t, _ = torch.linalg.qr(R_t, mode = 'reduced')
+      Q = Q_t.T
+      new_param.data = Q
 
 class ContinualAdapterLayer(nn.Module):
   def __init__(self, in_dim:int, hidden_dim:int):
@@ -42,13 +59,13 @@ class ContinualAdapterLayer(nn.Module):
     # print(f"length down before adding weight : {len(self.down_projections)}")
     # print(f"length up before adding weight : {len(self.up_projections)}")
     
-    down = nn.Parameter(torch.randn(self.in_dim, self.hidden_dim))
-    up = nn.Parameter(torch.randn(self.hidden_dim, self.in_dim))
-
-    # QR_init(down, self.down_projections)
-    # QR_init(up, self.up_projections)
-
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    down = nn.Parameter(torch.empty(self.in_dim, self.hidden_dim)).to(device)
+    up = nn.Parameter(torch.empty(self.hidden_dim, self.in_dim)).to(device)
+
+    QR_init(down, self.down_projections)
+    QR_init(up, self.up_projections)
+
     self.down_projections.append(down).to(device)
     self.up_projections.append(up).to(device)
 
@@ -59,7 +76,6 @@ class ContinualAdapterLayer(nn.Module):
     self.up_projections[new_task_id].requires_grad = True
 
     # print(f"length down before adding weight : {len(self.down_projections)}")
-    # print(f"length up before adding weight : {len(self.up_projections)}")
 
   def set_current_task(self, task_id:int):
     self.current_task = task_id
