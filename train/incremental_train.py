@@ -77,6 +77,7 @@ def train_incremental(model, train_loader, task_id, num_epochs, lr, delta):
           ortho_val += orthogonal_loss(w_dp, w_up, old_dp_list, old_up_list)
 
       total_loss_val = ce_loss + delta * ortho_val
+      print(f"total loss : {total_loss_val}, ce_loss : {ce_loss}, ortho_loss : {ortho_val}")
       total_loss_val.backward()
       optimizer.step()
 

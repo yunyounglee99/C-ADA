@@ -1,4 +1,5 @@
 import torch
+import math
 
 def orthogonal_loss(
     w_t_dp : torch.Tensor,
@@ -14,13 +15,12 @@ def orthogonal_loss(
   if len(old_dp_list) > 0:
     old_dp_cat = torch.cat(old_dp_list, dim = 1)
     dp_mat = w_t_dp.transpose(0, 1) @ old_dp_cat
-    loss_dp = (dp_mat ** 2).sum()
+    loss_dp = torch.norm(dp_mat)
 
   if len(old_up_list) > 0:
     old_up_cat = torch.cat([w.transpose(0,1) for w in old_up_list], dim = 1)
     up_mat = w_t_up @ old_up_cat
-    loss_up = (up_mat ** 2).sum()
-
+    loss_up = torch.norm(up_mat)
   loss = loss_dp + loss_up
 
   return loss
